@@ -1,26 +1,33 @@
+/* number of examples for each digit, you can change this all the way to 8 */
+const NUM_TRAIN = 4;
+
+/* position and size of digits in the video frame */
+const FIRST_DIGIT = [929, 37, 8, 10];
+const SECOND_DIGIT = [935.5, 37, 8, 10];
+const THIRD_DIGIT = [944.5, 37, 8, 10];
+const FOURTH_DIGIT = [951, 37, 8, 10];
+const FOUR_DIGIT_SIZES = [
+  FIRST_DIGIT, SECOND_DIGIT, THIRD_DIGIT, FOURTH_DIGIT,
+];
+
 let trainingImages = [];
 let testingImages = [];
 
-function getFramePaths(basePath, numFrames = 10, extension = 'png') {
-   // construct paths to all frames
-  const frameNames = new Array(numFrames).fill(0).map((_, i) => {
-    const numberStr = (i + 1).toString();
-    return numberStr.padStart(4, '0');;
-  });
+let featureExtractor;
+let classifier;
 
-  const framePaths = frameNames.map((frame) => {
-    return `${basePath}${frame}.${extension}`;
-  });
+const parentEl = document.getElementById('thumbs');
 
-  return framePaths;
-}
-
+/*
+*   Make sure all the images are loadded and their bitmap data is available
+*   for later use
+*/
 function preloadImages() {
   consoleMsg('Preloading images');
   const trainingFolderUrl = 'images/training';
   const testingFolderUrl = 'images/testing';
   
-  const trainingFolders = new Array(4).fill(0).map((_, i) => i + 1);
+  const trainingFolders = new Array(NUM_TRAIN).fill(0).map((_, i) => i + 1);
   const testingFolders = [9];
   const imagesNames = new Array(10).fill(0).map((_, i) => `${i}.png`);
   
@@ -39,6 +46,9 @@ function preloadImages() {
   })
 }
 
+/*
+* Add image/label pair as new example to the classifer for re-training later
+*/  
 function trainModel() {
   const promises = [];
   trainingImages.forEach((image) => {
@@ -49,64 +59,38 @@ function trainModel() {
 }
 
 
+/*
+*   Create classifier and train it with examples for each digit
+*/
 async function modelLoaded() {
   classifier = featureExtractor.classification();
 
+  //  add new train image for every image/label pair stored in `trainingImages`
   await trainModel();
   
-  // Retrain the network
+  // Retrain the network 
   consoleMsg('training model')
   await classifier.train(function(lossValue) {
     console.log("Loss is", lossValue);
   });
 
+  // Get paths of frame images which we want to predict
   const predictImagesPaths = getFramePaths('images/frames/image-',
     30);
   const prediction = await predictImage(predictImagesPaths[0]);
   
   consoleMsg('predicting')
+  // For each image, predict the number in the top-right corent
   predictImagesPaths.forEach(async (path) => {
     const prediction = await predictImage(path);
     addThumb(parentEl, path, prediction);
   });
 }
 
-function addThumb(parentEl, path, prediction) {
-  const thumb = document.createElement('div');
-  thumb.className = 'thumb';
-
-  const image = document.createElement('img');
-  image.className = 'image';
-  image.src = path;
-
-  const imageWrap = document.createElement('div');
-  imageWrap.className = 'imageWrap';
-  imageWrap.appendChild(image);
-  
-  const number = document.createElement('div');
-  number.className = 'number';
-  number.innerHTML = prediction;
-
-  thumb.appendChild(imageWrap);
-  thumb.appendChild(number);
-
-  parentEl.appendChild(thumb);
-}
-
-function crop(image, x, y, w, h) {
-  var cropped = createImage(w, h);
-  cropped.copy(image, x, y, x + w, y + h, 0, 0, x + w, y + h)
-  return cropped;
-}
-
-const FIRST_DIGIT = [929, 37, 8, 10];
-const SECOND_DIGIT = [935.5, 37, 8, 10];
-const THIRD_DIGIT = [944.5, 37, 8, 10];
-const FOURTH_DIGIT = [951, 37, 8, 10];
-const FOUR_DIGIT_SIZES = [
-  FIRST_DIGIT, SECOND_DIGIT, THIRD_DIGIT, FOURTH_DIGIT,
-];
-
+/*
+*   Predictions are returned as an array with probabilities, so find 
+*   the prediction with the highest probability
+*/
 function getHighestPrediction(arr) {
   const maxPrediction = arr.reduce((max, i) => {
     if (i.confidence > max.confidence) {
@@ -118,21 +102,31 @@ function getHighestPrediction(arr) {
   return maxPrediction.label;
 }
 
+/*
+*   Predicts a part of the image which is cropped according to size
+*   The resulting bitmap data is fed into the classifier
+*/
 async function predictDigit(img, size) {
+  //  get only relevant part of the image with a single digit
+  //  size will be one of FIRST_DIGIT, SECOND_DIGIT ...
   const cropped = crop(img, ...size);
   await cropped.loadPixels();
 
-  //  convert canvas to image
+  //  convert canvas to image using Base64 encoding
   const imgNew = new Image();
   imgNew.src = cropped.canvas.toDataURL();
 
+  //  the actual classification using the trained classfier
   const classification = await classifier.classify(imgNew);
   return getHighestPrediction(classification);
 }
 
+/*
+*   Loads a video frame and predicts four digits within it. 
+*/
 function predictImage(imagePath) {
   return new Promise((resolve, reject) => {
-    //  load a an entire image
+    //  load a an entire image and loop over 4 different positions/sizes
     loadImage(imagePath, async (img) => {
       const promises = FOUR_DIGIT_SIZES.map((size) => {
         return predictDigit(img, size);
@@ -144,18 +138,10 @@ function predictImage(imagePath) {
   });
 }
 
-let featureExtractor;
-let classifier;
-
-const parentEl = document.getElementById('thumbs');
-const msgEl = document.getElementById('msg');
-
-function consoleMsg(text) {
-  msg.innerHTML = text;
-}
-
+/*
+*   Setup function is automatically called by ml5.js
+*/
 function setup() {
   preloadImages();
   featureExtractor = ml5.featureExtractor("MobileNet", { numLabels: 10 }, modelLoaded);
-  
 }
