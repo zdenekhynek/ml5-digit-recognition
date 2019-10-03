@@ -2,7 +2,7 @@
 
 This is a very minimal example of using ML5.js to recognize digits from frames of a video using transfer learning as presented during a talk at the JSDayIE 2019 conference in Dublin which you can watch on [youtube](https://www.youtube.com/watch?v=6FtrpEGQHzE). Ignore the bored presenter, he's a dick.
 
-<insert image>
+![Full image](screenshot-1.jpg)
 
 This repo contains dummy data as the real data cannot be shared. For the sneak peek of what the actual data looked like, and to understand the motivation of why I've even bothered to do this in the first place, you can watch [the relevant part](https://youtu.be/6FtrpEGQHzE?t=298) of my talk.
 
@@ -16,7 +16,7 @@ python -m SimpleHTTPServer 8009
 
 and then open `http://localhost:8009/` in your browser.
 
-<insert image of the result>
+![Result](screenshot-2.jpg)
 
 If you're struggling to set up a local webserver, [this guide](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/set_up_a_local_testing_server) might help. Hopefully.
 
@@ -37,8 +37,6 @@ You can watch me struggle to explain it [here](https://youtu.be/6FtrpEGQHzE?t=59
 ### Training images
 
 The training images are stored at `/data/training`. There are a couple of folders each containing 10 small images with different digits. By default, we use images from the first four folders to train the model. You can increase the amount of training data used at.
-
-<image of training images>
 
 ### Code implementation
 
@@ -73,9 +71,18 @@ await classifier.classify(imgNew);
 
 ## This sucks, it's making mistakes
 
-You suck. Also, yeah, sorry. It doesn't work that great on the generated dummy data as on the real data. You can try increasing the number of training images by going to <>. What a great opportunity to tweak it yourself and get better results!
+You suck. Also, yeah, sorry. It doesn't work that great on the generated dummy data as on the real data. You can try increasing the number of training images by going to at the very top of `scripts.js`. E.g.:
+
+```
+const NUM_TRAIN = 7;
+```
+
+What a great opportunity to tweak it yourself and get better results!
 
 ## Next steps
 
-Have a look at the [ml5.js examples](https://ml5js.org/reference/) and [watch the Coding train videos](https://www.youtube.com/watch?v=jmznx0Q1fP0&list=PLRqwX-V7Uu6YPSwT06y_AEYTqIwbeam3y). If you want to go more low-level, you should also check out [Tensorflow.js tutorials](https://www.tensorflow.org/js/tutorials).
+Have a look at the [ml5.js examples](https://ml5js.org/reference/) and [watch the Coding train videos](https://www.youtube.com/watch?v=jmznx0Q1fP0&list=PLRqwX-V7Uu6YPSwT06y_AEYTqIwbeam3y).
+
+If you want to go more low-level, you should also check out [Tensorflow.js tutorials](https://www.tensorflow.org/js/tutorials).
+
 And if you happen to be based in London, come to the [AI Javascript London meetup](https://www.meetup.com/AI-JavaScript-London/) to have an absolute delight of meeting me in person. Also, it's a good meetup. You don't have to talk to me. 
