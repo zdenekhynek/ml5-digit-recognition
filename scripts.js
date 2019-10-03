@@ -17,10 +17,10 @@ function getFramePaths(basePath, numFrames = 10, extension = 'png') {
 
 function preloadImages() {
   consoleMsg('Preloading images');
-  const trainingFolderUrl = 'images/data/training';
-  const testingFolderUrl = 'images/data/testing';
+  const trainingFolderUrl = 'images/training';
+  const testingFolderUrl = 'images/testing';
   
-  const trainingFolders = new Array(6).fill(0).map((_, i) => i + 1);
+  const trainingFolders = new Array(4).fill(0).map((_, i) => i + 1);
   const testingFolders = [9];
   const imagesNames = new Array(10).fill(0).map((_, i) => `${i}.png`);
   
@@ -60,7 +60,7 @@ async function modelLoaded() {
     console.log("Loss is", lossValue);
   });
 
-  const predictImagesPaths = getFramePaths('images/data/frames/image-',
+  const predictImagesPaths = getFramePaths('images/frames/image-',
     30);
   const prediction = await predictImage(predictImagesPaths[0]);
   
@@ -154,12 +154,8 @@ function consoleMsg(text) {
   msg.innerHTML = text;
 }
 
-const options = {
-  numLabels: 10,
-}
-
 function setup() {
   preloadImages();
-  featureExtractor = ml5.featureExtractor("MobileNet", options, modelLoaded);
+  featureExtractor = ml5.featureExtractor("MobileNet", { numLabels: 10 }, modelLoaded);
   
 }
